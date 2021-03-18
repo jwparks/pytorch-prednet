@@ -15,8 +15,10 @@ class PredNet(nn.Module):
         self.a_channels = A_channels
         self.n_layers = len(R_channels)
         self.output_mode = output_mode
+        self.prediction_all = []
+        self.error_all = []
 
-        default_output_modes = ['prediction', 'error']
+        default_output_modes = ['prediction', 'error', 'prediction_all', 'error_all']
         assert output_mode in default_output_modes, 'Invalid output_mode: ' + str(output_mode)
 
         for i in range(self.n_layers):
@@ -90,6 +92,9 @@ class PredNet(nn.Module):
                 A_hat = conv(R_seq[l])
                 if l == 0:
                     frame_prediction = A_hat
+                if self.output_mode == 'prediction_all':
+                    self.prediction_all.append(A_hat)
+
                 pos = F.relu(A_hat - A)
                 neg = F.relu(A - A_hat)
                 E = torch.cat([pos, neg],1)
@@ -101,19 +106,18 @@ class PredNet(nn.Module):
                 mean_error = torch.cat([torch.mean(e.view(e.size(0), -1), 1, keepdim=True) for e in E_seq], 1)
                 # batch x n_layers
                 total_error.append(mean_error)
+            if self.output_mode == 'error_all':
+                for e in E_seq:
+                    self.error_all.append(e)
 
         if self.output_mode == 'error':
             return torch.stack(total_error, 2) # batch x n_layers x nt
         elif self.output_mode == 'prediction':
             return frame_prediction
-
-
-
-       
-
-
-
-
+        elif self.output_mode == 'prediction_all':
+            return self.prediction_all
+        if self.output_mode == 'error_all':
+            return self.error_all
 
 
 class SatLU(nn.Module):

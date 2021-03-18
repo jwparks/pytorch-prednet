@@ -23,7 +23,7 @@ time_loss_weights = 1./(nt - 1) * torch.ones(nt, 1)
 time_loss_weights[0] = 0
 time_loss_weights = Variable(time_loss_weights.cuda())
 
-DATA_DIR = '/media/lei/000F426D0004CCF4/datasets/kitti_data'
+DATA_DIR = 'kitti_data_raw'
 
 train_file = os.path.join(DATA_DIR, 'X_train.hkl')
 train_sources = os.path.join(DATA_DIR, 'sources_train.hkl')
@@ -68,9 +68,11 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
 
         errors.backward()
-
+        #print(errors.item())
         optimizer.step()
         if i%10 == 0:
-            print('Epoch: {}/{}, step: {}/{}, errors: {}'.format(epoch, num_epochs, i, len(kitti_train)//batch_size, errors.data[0]))
+            print('Epoch: {}/{}, step: {}/{}, errors: {}'.format(epoch, num_epochs, i, len(kitti_train)//batch_size, errors.item()))
+    if epoch%10 == 0:
+        torch.save(model.state_dict(), 'models/training_{:04d}.pt'.format(epoch))
+torch.save(model.state_dict(), 'models/training.pt')
 
-torch.save(model.state_dict(), 'training.pt')

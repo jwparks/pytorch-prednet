@@ -1,2 +1,6 @@
 __pycache__
 .vscode
+.ipynb_checkpoints
+.kitti_data
+.kitti_data_raw
+.models
